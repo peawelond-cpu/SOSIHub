@@ -2013,3 +2013,135 @@ TabSettings:AddButton({
 OrionLib:Init()
 
 SendNotification("SOSI Hub", "Скрипт успешно загружен со всеми функциями!") 
+-- ============================================
+-- SKYBOX MODULE (RED ECLIPSE REMOVED)
+-- ============================================
+
+local Lighting = game:GetService("Lighting")
+
+-- Helper function to apply skybox using the exact asset URL syntax
+local function SetSkybox(id)
+    -- Remove old custom sky if it exists
+    local oldSky = Lighting:FindFirstChild("SOSI_SKY")
+    if oldSky then
+        oldSky:Destroy()
+    end
+
+    -- Clean the input ID (extract numbers only)
+    local cleanId = tostring(id):gsub("%D", "")
+    if cleanId == "" then return end
+
+    local assetUrl = "http://www.roblox.com/asset/?id=" .. cleanId
+
+    -- Create new Sky instance
+    local s = Instance.new("Sky")
+    s.Name = "SOSI_SKY"
+    s.SkyboxBk = assetUrl
+    s.SkyboxDn = assetUrl
+    s.SkyboxFt = assetUrl
+    s.SkyboxLf = assetUrl
+    s.SkyboxRt = assetUrl
+    s.SkyboxUp = assetUrl
+    s.Parent = Lighting
+end
+
+-- Reset function to clear custom sky
+local function ResetSkybox()
+    local customSky = Lighting:FindFirstChild("SOSI_SKY")
+    if customSky then
+        customSky:Destroy()
+    end
+end
+
+-- ============================================
+-- PRESETS LIST
+-- ============================================
+local Presets = {
+    {Name = "Dark Cosmos",   ID = "78494093013376"},
+    {Name = "Purple Nebula", ID = "159454299"},
+    {Name = "Night Stars",   ID = "12064107"},
+    {Name = "Blue Space",    ID = "159454293"}
+}
+
+-- Extract unique preset names for the dropdown
+local presetNames = {}
+local presetLookup = {}
+
+for _, item in ipairs(Presets) do
+    table.insert(presetNames, item.Name)
+    presetLookup[item.Name] = item.ID
+end
+
+-- ============================================
+-- ORION UI TAB
+-- ============================================
+local TabSkybox = Window:MakeTab({
+    Name = "Skybox",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+-- Dropdown Menu
+TabSkybox:AddDropdown({
+    Name = "Select Preset",
+    Default = "Select...",
+    Options = presetNames,
+    Callback = function(selected)
+        local id = presetLookup[selected]
+        if id then
+            SetSkybox(id)
+            OrionLib:MakeNotification({
+                Name = "Skybox",
+                Content = "Applied: " .. selected,
+                Time = 3
+            })
+        end
+    end
+})
+
+-- Custom ID Input
+TabSkybox:AddSection({Name = "Custom Asset ID"})
+
+local CustomID = ""
+
+TabSkybox:AddTextbox({
+    Name = "Enter Texture ID",
+    Default = "",
+    TextDisappear = false,
+    Callback = function(val)
+        CustomID = val
+    end
+})
+
+TabSkybox:AddButton({
+    Name = "Apply Custom ID",
+    Callback = function()
+        if CustomID ~= "" then
+            SetSkybox(CustomID)
+            OrionLib:MakeNotification({
+                Name = "Skybox",
+                Content = "Custom Skybox applied!",
+                Time = 3
+            })
+        else
+            OrionLib:MakeNotification({
+                Name = "Error",
+                Content = "Please enter an ID first!",
+                Time = 3
+            })
+        end
+    end
+})
+
+-- Reset Button
+TabSkybox:AddButton({
+    Name = "Reset Skybox",
+    Callback = function()
+        ResetSkybox()
+        OrionLib:MakeNotification({
+            Name = "Skybox",
+            Content = "Skybox reset to default!",
+            Time = 3
+        })
+    end
+})
